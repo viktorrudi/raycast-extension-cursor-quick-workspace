@@ -133,7 +133,7 @@ export default function Command() {
       isLoading={isLoading} 
       searchBarPlaceholder={
         selectedDirs.size >= 2 
-          ? `Search directories... (${selectedDirs.size} selected • ⌘⏎ to open)`
+          ? `Search directories... (${selectedDirs.size} selected • ⌘O to open)`
           : "Search directories..."
       }
     >
@@ -154,14 +154,14 @@ export default function Command() {
                 <Action 
                   title={`Open ${selectedDirs.size} Directories in Cursor`}
                   onAction={openInCursor}
-                  shortcut={{ modifiers: ["cmd"], key: "enter" }} 
+                  shortcut={{ modifiers: ["cmd"], key: "o" }} 
                   icon={Icon.Terminal}
                 />
               )}
               <Action
                 title="Open Extension Preferences"
                 onAction={openCommandPreferences}
-                shortcut={{ modifiers: ["cmd"], key: "," }}
+                shortcut={{ modifiers: ["cmd"], key: "." }}
                 icon={Icon.Gear}
               />
             </ActionPanel>
