@@ -3,7 +3,7 @@
   "name": "cursor-quick-workspace",
   "title": "Cursor Quick-Workspace",
   "description": "This extension lets you multi-select directories (like repositories) to quickly open a workspace with these directories enabled. Helpful for AI-use on cross-repositories.",
-  "icon": "extension-icon.png",
+  "icon": "extension_icon.png",
   "author": "viktor_rudi",
   "owner": "viktorrudi",
   "license": "MIT",
@@ -13,7 +13,25 @@
       "title": "Quick Workspace",
       "subtitle": "Open more directories in Cursor",
       "description": "",
-      "mode": "view"
+      "mode": "view",
+      "preferences": [
+        {
+          "name": "repositoryDirectory",
+          "type": "directory",
+          "required": true,
+          "title": "Repository Directory",
+          "description": "The directory where your repositories are located"
+        },
+        {
+          "name": "showHiddenDirectories",
+          "type": "checkbox",
+          "required": false,
+          "title": "Show Hidden Directories",
+          "description": "Show directories that start with a dot (.)",
+          "default": false,
+          "label": "Include hidden directories"
+        }
+      ]
     }
   ],
   "dependencies": {
