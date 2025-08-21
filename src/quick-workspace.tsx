@@ -1,4 +1,14 @@
-import { ActionPanel, List, Action, Icon, showToast, Toast, closeMainWindow, getPreferenceValues, openCommandPreferences } from "@raycast/api";
+import {
+  ActionPanel,
+  List,
+  Action,
+  Icon,
+  showToast,
+  Toast,
+  closeMainWindow,
+  getPreferenceValues,
+  openCommandPreferences,
+} from "@raycast/api";
 import { useState, useEffect } from "react";
 import { readdir } from "fs/promises";
 import { statSync, existsSync } from "fs";
@@ -16,15 +26,15 @@ export default function Command() {
   const [selectedDirs, setSelectedDirs] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
-  
+
   const preferences = getPreferenceValues<Preferences>();
-  const repositoryPath = preferences.repositoryDirectory?.replace('~', homedir()) || '';
+  const repositoryPath = preferences.repositoryDirectory?.replace("~", homedir()) || "";
 
   useEffect(() => {
     async function fetchDirectories() {
       setDirectoryError(null);
-      
-      if (!repositoryPath || repositoryPath.trim() === '') {
+
+      if (!repositoryPath || repositoryPath.trim() === "") {
         setDirectoryError("Repository directory not configured");
         setIsLoading(false);
         return;
@@ -42,7 +52,7 @@ export default function Command() {
           const fullPath = path.join(repositoryPath, file);
           try {
             const isDirectory = statSync(fullPath).isDirectory();
-            const isHidden = file.startsWith('.');
+            const isHidden = file.startsWith(".");
             return isDirectory && (preferences.showHiddenDirectories || !isHidden);
           } catch {
             return false;
@@ -51,10 +61,10 @@ export default function Command() {
         setDirectories(dirs);
       } catch {
         setDirectoryError(`Failed to read directory: ${repositoryPath}`);
-        showToast({ 
-          style: Toast.Style.Failure, 
-          title: "Failed to load directories", 
-          message: `Could not read ${repositoryPath}` 
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to load directories",
+          message: `Could not read ${repositoryPath}`,
         });
       } finally {
         setIsLoading(false);
@@ -75,27 +85,27 @@ export default function Command() {
 
   const openInCursor = () => {
     if (selectedDirs.size < 2) {
-      showToast({ 
-        style: Toast.Style.Failure, 
-        title: "Please Select At Least Two Directories" 
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Please Select At Least Two Directories",
       });
       return;
     }
-    
+
     const dirPaths = Array.from(selectedDirs).map((dir) => `"${path.join(repositoryPath, dir)}"`);
     const command = `cursor ${dirPaths.join(" ")}`;
-    
+
     exec(command, (error) => {
       if (error) {
-        showToast({ 
-          style: Toast.Style.Failure, 
-          title: "Failed To Open In Cursor", 
-          message: error.message 
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Failed To Open In Cursor",
+          message: error.message,
         });
       } else {
-        showToast({ 
-          style: Toast.Style.Success, 
-          title: `Opened ${selectedDirs.size} Directories In Cursor` 
+        showToast({
+          style: Toast.Style.Success,
+          title: `Opened ${selectedDirs.size} Directories In Cursor`,
         });
         setSelectedDirs(new Set()); // Clear selection after opening
         closeMainWindow(); // Close Raycast overlay
@@ -116,11 +126,7 @@ export default function Command() {
           icon={Icon.ExclamationMark}
           actions={
             <ActionPanel>
-              <Action
-                title="Open Command Preferences"
-                onAction={openCommandPreferences}
-                icon={Icon.Gear}
-              />
+              <Action title="Open Command Preferences" onAction={openCommandPreferences} icon={Icon.Gear} />
             </ActionPanel>
           }
         />
@@ -129,32 +135,32 @@ export default function Command() {
   }
 
   return (
-    <List 
-      isLoading={isLoading} 
+    <List
+      isLoading={isLoading}
       searchBarPlaceholder={
-        selectedDirs.size >= 2 
+        selectedDirs.size >= 2
           ? `Search directories... (${selectedDirs.size} selected • ⌘O to open)`
           : "Search directories..."
       }
     >
       {directories.map((dir) => (
-        <List.Item 
-          key={dir} 
-          title={dir} 
+        <List.Item
+          key={dir}
+          title={dir}
           icon={getSelectionIcon(dir)}
-          subtitle={`${path.join(repositoryPath, dir)} ${selectedDirs.has(dir) ? '✓ Selected' : ''}`}
+          subtitle={`${path.join(repositoryPath, dir)} ${selectedDirs.has(dir) ? "✓ Selected" : ""}`}
           actions={
             <ActionPanel>
-              <Action 
+              <Action
                 title={selectedDirs.has(dir) ? "Deselect Directory" : "Select Directory"}
                 onAction={() => toggleSelection(dir)}
                 icon={selectedDirs.has(dir) ? Icon.XMarkCircle : Icon.CheckCircle}
               />
               {selectedDirs.size >= 2 && (
-                <Action 
+                <Action
                   title={`Open ${selectedDirs.size} Directories in Cursor`}
                   onAction={openInCursor}
-                  shortcut={{ modifiers: ["cmd"], key: "o" }} 
+                  shortcut={{ modifiers: ["cmd"], key: "o" }}
                   icon={Icon.Terminal}
                 />
               )}

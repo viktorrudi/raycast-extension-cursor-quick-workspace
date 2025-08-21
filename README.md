@@ -1,4 +1,4 @@
-# Cursor Quick-Workspace
+# Cursor Quick-workspace
 
 Multi-select directories to quickly open them as a workspace in Cursor.
 
@@ -13,4 +13,4 @@ Multi-select directories to quickly open them as a workspace in Cursor.
 - **Repository Directory**: Directory to scan for repositories
 - **Show Hidden Directories**: Show directories starting with `.`
 
-Access preferences with **⌘ + .** or Raycast Settings > Extensions > Cursor Quick-Workspace.
+Access preferences with **⌘ + .** or Raycast Settings > Extensions > Cursor Quick-workspace.
