@@ -8,6 +8,9 @@ import {
   closeMainWindow,
   getPreferenceValues,
   openCommandPreferences,
+  LocalStorage,
+  Form,
+  useNavigation,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { readdir } from "fs/promises";
@@ -21,14 +24,158 @@ interface Preferences {
   showHiddenDirectories: boolean;
 }
 
+interface Favorite {
+  id: string;
+  name: string;
+  directories: string[];
+}
+
+function RenameFavoriteForm({ favorite, onRename }: { favorite: Favorite; onRename: (id: string, newName: string) => void }) {
+  const { pop } = useNavigation();
+
+  const handleSubmit = (values: { name: string }) => {
+    if (values.name.trim()) {
+      onRename(favorite.id, values.name.trim());
+      pop();
+    }
+  };
+
+  return (
+    <Form
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm title="Rename Favorite" onSubmit={handleSubmit} icon={Icon.Pencil} />
+          <Action title="Cancel" onAction={pop} icon={Icon.XMarkCircle} shortcut={{ modifiers: ["cmd"], key: "w" }} />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="name"
+        title="Favorite Name"
+        defaultValue={favorite.name}
+        placeholder="Enter new name for favorite"
+      />
+    </Form>
+  );
+}
+
 export default function Command() {
   const [directories, setDirectories] = useState<string[]>([]);
   const [selectedDirs, setSelectedDirs] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
 
   const preferences = getPreferenceValues<Preferences>();
   const repositoryPath = preferences.repositoryDirectory?.replace("~", homedir()) || "";
+
+  // Load favorites from LocalStorage
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const favoritesData = await LocalStorage.getItem<string>("favorites");
+        if (favoritesData) {
+          const parsedFavorites = JSON.parse(favoritesData) as Favorite[];
+          setFavorites(parsedFavorites);
+        }
+      } catch (error) {
+        console.error("Failed to load favorites:", error);
+      }
+    }
+    loadFavorites();
+  }, []);
+
+  // Save favorites to LocalStorage
+  const saveFavorites = async (newFavorites: Favorite[]) => {
+    try {
+      await LocalStorage.setItem("favorites", JSON.stringify(newFavorites));
+      setFavorites(newFavorites);
+    } catch (error) {
+      console.error("Failed to save favorites:", error);
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to save favorite",
+        message: "Could not save favorite to storage",
+      });
+    }
+  };
+
+  // Create favorite from current selection
+  const createFavorite = () => {
+    if (selectedDirs.size < 2) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Please Select At Least Two Directories",
+      });
+      return;
+    }
+
+    const selectedArray = Array.from(selectedDirs).sort();
+    const name = selectedArray.join(", ");
+    const id = Date.now().toString();
+    
+    const newFavorite: Favorite = {
+      id,
+      name,
+      directories: selectedArray,
+    };
+
+    const newFavorites = [...favorites, newFavorite];
+    saveFavorites(newFavorites);
+    
+    showToast({
+      style: Toast.Style.Success,
+      title: "Favorite Created",
+      message: name,
+    });
+  };
+
+  // Remove favorite
+  const removeFavorite = (favoriteId: string) => {
+    const newFavorites = favorites.filter(fav => fav.id !== favoriteId);
+    saveFavorites(newFavorites);
+    
+    showToast({
+      style: Toast.Style.Success,
+      title: "Favorite Removed",
+    });
+  };
+
+  // Rename favorite
+  const renameFavorite = (favoriteId: string, newName: string) => {
+    const newFavorites = favorites.map(fav => 
+      fav.id === favoriteId ? { ...fav, name: newName } : fav
+    );
+    saveFavorites(newFavorites);
+    
+    showToast({
+      style: Toast.Style.Success,
+      title: "Favorite Renamed",
+      message: newName,
+    });
+  };
+
+  // Open favorite in Cursor
+  const openFavoriteInCursor = (favorite: Favorite) => {
+    const dirPaths = favorite.directories.map((dir) => `"${path.join(repositoryPath, dir)}"`);
+    const command = `cursor ${dirPaths.join(" ")}`;
+
+    exec(command, (error) => {
+      if (error) {
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Failed To Open In Cursor",
+          message: error.message,
+        });
+      } else {
+        showToast({
+          style: Toast.Style.Success,
+          title: `Opened ${favorite.name} In Cursor`,
+        });
+        closeMainWindow();
+      }
+    });
+  };
 
   useEffect(() => {
     async function fetchDirectories() {
@@ -139,41 +286,95 @@ export default function Command() {
       isLoading={isLoading}
       searchBarPlaceholder={
         selectedDirs.size >= 2
-          ? `Search directories... (${selectedDirs.size} selected • ⌘O to open)`
-          : "Search directories..."
+          ? `Search directories... (${selectedDirs.size} selected • ⌘O to open • ⌘F to favorite)`
+          : "Search directories... (⌘R to rename favorites)"
       }
     >
-      {directories.map((dir) => (
-        <List.Item
-          key={dir}
-          title={dir}
-          icon={getSelectionIcon(dir)}
-          subtitle={`${path.join(repositoryPath, dir)} ${selectedDirs.has(dir) ? "✓ Selected" : ""}`}
-          actions={
-            <ActionPanel>
-              <Action
-                title={selectedDirs.has(dir) ? "Deselect Directory" : "Select Directory"}
-                onAction={() => toggleSelection(dir)}
-                icon={selectedDirs.has(dir) ? Icon.XMarkCircle : Icon.CheckCircle}
-              />
-              {selectedDirs.size >= 2 && (
+      {/* Favorites Section */}
+      {favorites.length > 0 && (
+        <List.Section title="⭐ Favorites" subtitle={`${favorites.length} saved workspace${favorites.length !== 1 ? 's' : ''}`}>
+          {favorites.map((favorite) => (
+            <List.Item
+              key={`fav-${favorite.id}`}
+              title={favorite.name}
+              icon={{ source: Icon.Star, tintColor: "#FFD700" }}
+              subtitle={`${favorite.directories.join(", ")}`}
+              accessories={[{ text: "★", tooltip: "Favorite workspace" }]}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Open in Cursor"
+                    onAction={() => openFavoriteInCursor(favorite)}
+                    icon={Icon.Terminal}
+                  />
+                  <Action.Push
+                    title="Rename Favorite"
+                    target={<RenameFavoriteForm favorite={favorite} onRename={renameFavorite} />}
+                    icon={Icon.Pencil}
+                    shortcut={{ modifiers: ["cmd"], key: "r" }}
+                  />
+                  <Action
+                    title="Remove Favorite"
+                    onAction={() => removeFavorite(favorite.id)}
+                    icon={Icon.Trash}
+                    style={Action.Style.Destructive}
+                  />
+                  <Action
+                    title="Open Extension Preferences"
+                    onAction={openCommandPreferences}
+                    shortcut={{ modifiers: ["cmd"], key: "." }}
+                    icon={Icon.Gear}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      
+      {/* Directories Section */}
+      <List.Section title="📁 Directories" subtitle="Select multiple directories to create workspace">
+        {directories.map((dir) => (
+          <List.Item
+            key={dir}
+            title={dir}
+            icon={getSelectionIcon(dir)}
+            subtitle={path.join(repositoryPath, dir)}
+            accessories={selectedDirs.has(dir) ? [{ text: "✓", tooltip: "Selected" }] : undefined}
+            actions={
+              <ActionPanel>
                 <Action
-                  title={`Open ${selectedDirs.size} Directories in Cursor`}
-                  onAction={openInCursor}
-                  shortcut={{ modifiers: ["cmd"], key: "o" }}
-                  icon={Icon.Terminal}
+                  title={selectedDirs.has(dir) ? "Deselect Directory" : "Select Directory"}
+                  onAction={() => toggleSelection(dir)}
+                  icon={selectedDirs.has(dir) ? Icon.XMarkCircle : Icon.CheckCircle}
                 />
-              )}
-              <Action
-                title="Open Extension Preferences"
-                onAction={openCommandPreferences}
-                shortcut={{ modifiers: ["cmd"], key: "." }}
-                icon={Icon.Gear}
-              />
-            </ActionPanel>
-          }
-        />
-      ))}
+                {selectedDirs.size >= 2 && (
+                  <Action
+                    title={`Open ${selectedDirs.size} Directories in Cursor`}
+                    onAction={openInCursor}
+                    shortcut={{ modifiers: ["cmd"], key: "o" }}
+                    icon={Icon.Terminal}
+                  />
+                )}
+                {selectedDirs.size >= 2 && (
+                  <Action
+                    title="Create Favorite"
+                    onAction={createFavorite}
+                    shortcut={{ modifiers: ["cmd"], key: "f" }}
+                    icon={Icon.Star}
+                  />
+                )}
+                <Action
+                  title="Open Extension Preferences"
+                  onAction={openCommandPreferences}
+                  shortcut={{ modifiers: ["cmd"], key: "." }}
+                  icon={Icon.Gear}
+                />
+              </ActionPanel>
+            }
+          />
+        ))}
+      </List.Section>
     </List>
   );
 }
