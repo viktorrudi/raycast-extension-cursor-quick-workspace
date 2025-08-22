@@ -30,7 +30,13 @@ interface Favorite {
   directories: string[];
 }
 
-function RenameFavoriteForm({ favorite, onRename }: { favorite: Favorite; onRename: (id: string, newName: string) => void }) {
+function RenameFavoriteForm({
+  favorite,
+  onRename,
+}: {
+  favorite: Favorite;
+  onRename: (id: string, newName: string) => void;
+}) {
   const { pop } = useNavigation();
 
   const handleSubmit = (values: { name: string }) => {
@@ -113,7 +119,7 @@ export default function Command() {
     const selectedArray = Array.from(selectedDirs).sort();
     const name = selectedArray.join(", ");
     const id = Date.now().toString();
-    
+
     const newFavorite: Favorite = {
       id,
       name,
@@ -122,7 +128,7 @@ export default function Command() {
 
     const newFavorites = [...favorites, newFavorite];
     saveFavorites(newFavorites);
-    
+
     showToast({
       style: Toast.Style.Success,
       title: "Favorite Created",
@@ -132,9 +138,9 @@ export default function Command() {
 
   // Remove favorite
   const removeFavorite = (favoriteId: string) => {
-    const newFavorites = favorites.filter(fav => fav.id !== favoriteId);
+    const newFavorites = favorites.filter((fav) => fav.id !== favoriteId);
     saveFavorites(newFavorites);
-    
+
     showToast({
       style: Toast.Style.Success,
       title: "Favorite Removed",
@@ -143,11 +149,9 @@ export default function Command() {
 
   // Rename favorite
   const renameFavorite = (favoriteId: string, newName: string) => {
-    const newFavorites = favorites.map(fav => 
-      fav.id === favoriteId ? { ...fav, name: newName } : fav
-    );
+    const newFavorites = favorites.map((fav) => (fav.id === favoriteId ? { ...fav, name: newName } : fav));
     saveFavorites(newFavorites);
-    
+
     showToast({
       style: Toast.Style.Success,
       title: "Favorite Renamed",
@@ -292,7 +296,10 @@ export default function Command() {
     >
       {/* Favorites Section */}
       {favorites.length > 0 && (
-        <List.Section title="⭐ Favorites" subtitle={`${favorites.length} saved workspace${favorites.length !== 1 ? 's' : ''}`}>
+        <List.Section
+          title="⭐ Favorites"
+          subtitle={`${favorites.length} saved workspace${favorites.length !== 1 ? "s" : ""}`}
+        >
           {favorites.map((favorite) => (
             <List.Item
               key={`fav-${favorite.id}`}
@@ -302,11 +309,7 @@ export default function Command() {
               accessories={[{ text: "★", tooltip: "Favorite workspace" }]}
               actions={
                 <ActionPanel>
-                  <Action
-                    title="Open in Cursor"
-                    onAction={() => openFavoriteInCursor(favorite)}
-                    icon={Icon.Terminal}
-                  />
+                  <Action title="Open in Cursor" onAction={() => openFavoriteInCursor(favorite)} icon={Icon.Terminal} />
                   <Action
                     title="Remove Favorite"
                     onAction={() => removeFavorite(favorite.id)}
@@ -332,7 +335,7 @@ export default function Command() {
           ))}
         </List.Section>
       )}
-      
+
       {/* Directories Section */}
       <List.Section title="📁 Directories" subtitle="Select multiple directories to create workspace">
         {directories.map((dir) => (
