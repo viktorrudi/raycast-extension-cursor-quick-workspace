@@ -30,6 +30,33 @@ interface Favorite {
   directories: string[];
 }
 
+interface DirectoryInfo {
+  name: string;
+  gitBranch?: string;
+}
+
+// Helper function to check if a directory is a git repository
+function isGitRepository(dirPath: string): boolean {
+  try {
+    return existsSync(path.join(dirPath, ".git"));
+  } catch {
+    return false;
+  }
+}
+
+// Helper function to get current git branch
+function getGitBranch(dirPath: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    exec("git branch --show-current", { cwd: dirPath }, (error, stdout) => {
+      if (error || !stdout.trim()) {
+        resolve(null);
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  });
+}
+
 function RenameFavoriteForm({
   favorite,
   onRename,
@@ -66,7 +93,7 @@ function RenameFavoriteForm({
 }
 
 export default function Command() {
-  const [directories, setDirectories] = useState<string[]>([]);
+  const [directories, setDirectories] = useState<DirectoryInfo[]>([]);
   const [selectedDirs, setSelectedDirs] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
@@ -199,7 +226,7 @@ export default function Command() {
 
       try {
         const files = await readdir(repositoryPath);
-        const dirs = files.filter((file) => {
+        const dirNames = files.filter((file) => {
           const fullPath = path.join(repositoryPath, file);
           try {
             const isDirectory = statSync(fullPath).isDirectory();
@@ -209,7 +236,23 @@ export default function Command() {
             return false;
           }
         });
-        setDirectories(dirs);
+
+        // Get git branch information for each directory
+        const directoriesWithGitInfo = await Promise.all(
+          dirNames.map(async (dirName): Promise<DirectoryInfo> => {
+            const fullPath = path.join(repositoryPath, dirName);
+            const isGitRepo = isGitRepository(fullPath);
+            
+            if (isGitRepo) {
+              const gitBranch = await getGitBranch(fullPath);
+              return { name: dirName, gitBranch: gitBranch || undefined };
+            }
+            
+            return { name: dirName };
+          })
+        );
+
+        setDirectories(directoriesWithGitInfo);
       } catch {
         setDirectoryError(`Failed to read directory: ${repositoryPath}`);
         showToast({
@@ -224,12 +267,12 @@ export default function Command() {
     fetchDirectories();
   }, [repositoryPath, preferences.showHiddenDirectories]);
 
-  const toggleSelection = (dir: string) => {
+  const toggleSelection = (dirName: string) => {
     const newSelection = new Set(selectedDirs);
-    if (newSelection.has(dir)) {
-      newSelection.delete(dir);
+    if (newSelection.has(dirName)) {
+      newSelection.delete(dirName);
     } else {
-      newSelection.add(dir);
+      newSelection.add(dirName);
     }
     setSelectedDirs(newSelection);
   };
@@ -264,8 +307,8 @@ export default function Command() {
     });
   };
 
-  const getSelectionIcon = (dir: string) => {
-    return selectedDirs.has(dir) ? Icon.CheckCircle : Icon.Circle;
+  const getSelectionIcon = (dirName: string) => {
+    return selectedDirs.has(dirName) ? Icon.CheckCircle : Icon.Circle;
   };
 
   if (directoryError) {
@@ -338,20 +381,36 @@ export default function Command() {
 
       {/* Directories Section */}
       <List.Section title="📁 Directories" subtitle="Select multiple directories to create workspace">
-        {directories.map((dir) => (
-          <List.Item
-            key={dir}
-            title={dir}
-            icon={getSelectionIcon(dir)}
-            subtitle={path.join(repositoryPath, dir)}
-            accessories={selectedDirs.has(dir) ? [{ text: "✓", tooltip: "Selected" }] : undefined}
-            actions={
-              <ActionPanel>
-                <Action
-                  title={selectedDirs.has(dir) ? "Deselect Directory" : "Select Directory"}
-                  onAction={() => toggleSelection(dir)}
-                  icon={selectedDirs.has(dir) ? Icon.XMarkCircle : Icon.CheckCircle}
-                />
+        {directories.map((dir) => {
+          const accessories = [];
+          
+          // Add git branch tag if available
+          if (dir.gitBranch) {
+            accessories.push({
+              tag: { value: dir.gitBranch, color: "#22c55e" },
+              tooltip: `Git branch: ${dir.gitBranch}`
+            });
+          }
+          
+          // Add selection checkmark
+          if (selectedDirs.has(dir.name)) {
+            accessories.push({ text: "✓", tooltip: "Selected" });
+          }
+
+          return (
+            <List.Item
+              key={dir.name}
+              title={dir.name}
+              icon={getSelectionIcon(dir.name)}
+              subtitle={path.join(repositoryPath, dir.name)}
+              accessories={accessories.length > 0 ? accessories : undefined}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title={selectedDirs.has(dir.name) ? "Deselect Directory" : "Select Directory"}
+                    onAction={() => toggleSelection(dir.name)}
+                    icon={selectedDirs.has(dir.name) ? Icon.XMarkCircle : Icon.CheckCircle}
+                  />
                 {selectedDirs.size >= 2 && (
                   <Action
                     title={`Open ${selectedDirs.size} Directories in Cursor`}
@@ -368,16 +427,17 @@ export default function Command() {
                     icon={Icon.Star}
                   />
                 )}
-                <Action
-                  title="Open Extension Preferences"
-                  onAction={openCommandPreferences}
-                  shortcut={{ modifiers: ["cmd"], key: "." }}
-                  icon={Icon.Gear}
-                />
-              </ActionPanel>
-            }
-          />
-        ))}
+                  <Action
+                    title="Open Extension Preferences"
+                    onAction={openCommandPreferences}
+                    shortcut={{ modifiers: ["cmd"], key: "." }}
+                    icon={Icon.Gear}
+                  />
+                </ActionPanel>
+              }
+            />
+          );
+        })}
       </List.Section>
     </List>
   );

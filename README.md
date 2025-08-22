@@ -10,6 +10,12 @@ Multi-select directories to quickly open them as a workspace in Cursor.
 4. Press **⌘ + F** to save current selection as a favorite
 5. Press **⌘ + R** to rename any favorite
 
+## Features
+
+- **Git Branch Display**: Each directory that is a git repository shows the current active branch in a green tag on the right side
+- **Multi-directory Selection**: Select multiple directories to create workspaces
+- **Favorites Management**: Save, rename, and organize frequently used workspace combinations
+
 ## Favorites
 
 - **Create Favorite**: Select 2+ directories and press **⌘ + F**
