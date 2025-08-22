@@ -242,14 +242,14 @@ export default function Command() {
           dirNames.map(async (dirName): Promise<DirectoryInfo> => {
             const fullPath = path.join(repositoryPath, dirName);
             const isGitRepo = isGitRepository(fullPath);
-            
+
             if (isGitRepo) {
               const gitBranch = await getGitBranch(fullPath);
               return { name: dirName, gitBranch: gitBranch || undefined };
             }
-            
+
             return { name: dirName };
-          })
+          }),
         );
 
         setDirectories(directoriesWithGitInfo);
@@ -383,15 +383,15 @@ export default function Command() {
       <List.Section title="📁 Directories" subtitle="Select multiple directories to create workspace">
         {directories.map((dir) => {
           const accessories = [];
-          
+
           // Add git branch tag if available
           if (dir.gitBranch) {
             accessories.push({
               tag: { value: dir.gitBranch, color: "#22c55e" },
-              tooltip: `Git branch: ${dir.gitBranch}`
+              tooltip: `Git branch: ${dir.gitBranch}`,
             });
           }
-          
+
           // Add selection checkmark
           if (selectedDirs.has(dir.name)) {
             accessories.push({ text: "✓", tooltip: "Selected" });
@@ -411,22 +411,22 @@ export default function Command() {
                     onAction={() => toggleSelection(dir.name)}
                     icon={selectedDirs.has(dir.name) ? Icon.XMarkCircle : Icon.CheckCircle}
                   />
-                {selectedDirs.size >= 2 && (
-                  <Action
-                    title={`Open ${selectedDirs.size} Directories in Cursor`}
-                    onAction={openInCursor}
-                    shortcut={{ modifiers: ["cmd"], key: "o" }}
-                    icon={Icon.Terminal}
-                  />
-                )}
-                {selectedDirs.size >= 2 && (
-                  <Action
-                    title="Create Favorite"
-                    onAction={createFavorite}
-                    shortcut={{ modifiers: ["cmd"], key: "f" }}
-                    icon={Icon.Star}
-                  />
-                )}
+                  {selectedDirs.size >= 2 && (
+                    <Action
+                      title={`Open ${selectedDirs.size} Directories in Cursor`}
+                      onAction={openInCursor}
+                      shortcut={{ modifiers: ["cmd"], key: "o" }}
+                      icon={Icon.Terminal}
+                    />
+                  )}
+                  {selectedDirs.size >= 2 && (
+                    <Action
+                      title="Create Favorite"
+                      onAction={createFavorite}
+                      shortcut={{ modifiers: ["cmd"], key: "f" }}
+                      icon={Icon.Star}
+                    />
+                  )}
                   <Action
                     title="Open Extension Preferences"
                     onAction={openCommandPreferences}
