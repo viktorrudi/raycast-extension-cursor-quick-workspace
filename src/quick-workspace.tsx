@@ -307,17 +307,18 @@ export default function Command() {
                     onAction={() => openFavoriteInCursor(favorite)}
                     icon={Icon.Terminal}
                   />
-                  <Action.Push
-                    title="Rename Favorite"
-                    target={<RenameFavoriteForm favorite={favorite} onRename={renameFavorite} />}
-                    icon={Icon.Pencil}
-                    shortcut={{ modifiers: ["cmd"], key: "r" }}
-                  />
                   <Action
                     title="Remove Favorite"
                     onAction={() => removeFavorite(favorite.id)}
                     icon={Icon.Trash}
                     style={Action.Style.Destructive}
+                    shortcut={{ modifiers: ["cmd"], key: "f" }}
+                  />
+                  <Action.Push
+                    title="Rename Favorite"
+                    target={<RenameFavoriteForm favorite={favorite} onRename={renameFavorite} />}
+                    icon={Icon.Pencil}
+                    shortcut={{ modifiers: ["cmd"], key: "r" }}
                   />
                   <Action
                     title="Open Extension Preferences"

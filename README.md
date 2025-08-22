@@ -13,9 +13,9 @@ Multi-select directories to quickly open them as a workspace in Cursor.
 ## Favorites
 
 - **Create Favorite**: Select 2+ directories and press **⌘ + F**
+- **Remove Favorite**: Press **⌘ + F** on any favorite to unfavorite it
 - **Open Favorite**: Press **Enter** on any favorite (shown with golden ⭐ icon)
 - **Rename Favorite**: Press **⌘ + R** on any favorite to give it a custom name
-- **Remove Favorite**: Use the "Remove Favorite" action on any favorite
 - **Auto-naming**: Favorites are automatically named as comma-separated directory names
 - **Visual Organization**: Favorites appear in a dedicated section at the top with clear separation
 - **Persistent**: Favorites are saved and persist between sessions
