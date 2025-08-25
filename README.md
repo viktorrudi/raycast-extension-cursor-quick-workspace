@@ -5,7 +5,7 @@ Multi-select directories to quickly open them as a workspace in Cursor.
 ## Usage
 
 1. Launch extension from Raycast
-2. Press **Enter** to select/deselect directories (minimum 2 required)
+2. Press **Enter** to select/deselect directories (minimum 1 required)
 3. Press **⌘ + O** to open selected directories in Cursor
 4. Press **⌘ + F** to save current selection as a favorite
 5. Press **⌘ + R** to rename any favorite
@@ -18,7 +18,7 @@ Multi-select directories to quickly open them as a workspace in Cursor.
 
 ## Favorites
 
-- **Create Favorite**: Select 2+ directories and press **⌘ + F**
+- **Create Favorite**: Select 1+ directories and press **⌘ + F**
 - **Remove Favorite**: Press **⌘ + F** on any favorite to unfavorite it
 - **Open Favorite**: Press **Enter** on any favorite (shown with golden ⭐ icon)
 - **Rename Favorite**: Press **⌘ + R** on any favorite to give it a custom name

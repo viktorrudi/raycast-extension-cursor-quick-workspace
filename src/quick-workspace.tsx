@@ -135,10 +135,10 @@ export default function Command() {
 
   // Create favorite from current selection
   const createFavorite = () => {
-    if (selectedDirs.size < 2) {
+    if (selectedDirs.size < 1) {
       showToast({
         style: Toast.Style.Failure,
-        title: "Please Select At Least Two Directories",
+        title: "Please Select At Least One Directory",
       });
       return;
     }
@@ -278,10 +278,10 @@ export default function Command() {
   };
 
   const openInCursor = () => {
-    if (selectedDirs.size < 2) {
+    if (selectedDirs.size < 1) {
       showToast({
         style: Toast.Style.Failure,
-        title: "Please Select At Least Two Directories",
+        title: "Please Select At Least One Directory",
       });
       return;
     }
@@ -332,7 +332,7 @@ export default function Command() {
     <List
       isLoading={isLoading}
       searchBarPlaceholder={
-        selectedDirs.size >= 2
+        selectedDirs.size >= 1
           ? `Search directories... (${selectedDirs.size} selected • ⌘O to open • ⌘F to favorite)`
           : "Search directories... (⌘R to rename favorites)"
       }
@@ -411,15 +411,15 @@ export default function Command() {
                     onAction={() => toggleSelection(dir.name)}
                     icon={selectedDirs.has(dir.name) ? Icon.XMarkCircle : Icon.CheckCircle}
                   />
-                  {selectedDirs.size >= 2 && (
+                  {selectedDirs.size >= 1 && (
                     <Action
-                      title={`Open ${selectedDirs.size} Directories in Cursor`}
+                      title={`Open ${selectedDirs.size} ${selectedDirs.size === 1 ? 'Directory' : 'Directories'} in Cursor`}
                       onAction={openInCursor}
                       shortcut={{ modifiers: ["cmd"], key: "o" }}
                       icon={Icon.Terminal}
                     />
                   )}
-                  {selectedDirs.size >= 2 && (
+                  {selectedDirs.size >= 1 && (
                     <Action
                       title="Create Favorite"
                       onAction={createFavorite}
