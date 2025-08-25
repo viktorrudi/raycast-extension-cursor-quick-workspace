@@ -252,7 +252,20 @@ export default function Command() {
           }),
         );
 
-        setDirectories(directoriesWithGitInfo);
+        // Sort directories: git repositories first, then alphabetically within each group
+        const sortedDirectories = directoriesWithGitInfo.sort((a, b) => {
+          const aHasGit = a.gitBranch !== undefined;
+          const bHasGit = b.gitBranch !== undefined;
+          
+          // If one has git and the other doesn't, prioritize git repo
+          if (aHasGit && !bHasGit) return -1;
+          if (!aHasGit && bHasGit) return 1;
+          
+          // If both have same git status, sort alphabetically by name
+          return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+        });
+
+        setDirectories(sortedDirectories);
       } catch {
         setDirectoryError(`Failed to read directory: ${repositoryPath}`);
         showToast({

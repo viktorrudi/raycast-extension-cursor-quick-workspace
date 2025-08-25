@@ -12,6 +12,7 @@ Multi-select directories to quickly open them as a workspace in Cursor.
 
 ## Features
 
+- **Smart Sorting**: Git repositories are prioritized at the top, then all directories are sorted alphabetically within their groups
 - **Git Branch Display**: Each directory that is a git repository shows the current active branch in a green tag on the right side
 - **Multi-directory Selection**: Select multiple directories to create workspaces
 - **Favorites Management**: Save, rename, and organize frequently used workspace combinations
