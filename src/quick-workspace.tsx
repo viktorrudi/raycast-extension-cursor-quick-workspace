@@ -256,11 +256,11 @@ export default function Command() {
         const sortedDirectories = directoriesWithGitInfo.sort((a, b) => {
           const aHasGit = a.gitBranch !== undefined;
           const bHasGit = b.gitBranch !== undefined;
-          
+
           // If one has git and the other doesn't, prioritize git repo
           if (aHasGit && !bHasGit) return -1;
           if (!aHasGit && bHasGit) return 1;
-          
+
           // If both have same git status, sort alphabetically by name
           return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
         });
@@ -426,7 +426,7 @@ export default function Command() {
                   />
                   {selectedDirs.size >= 1 && (
                     <Action
-                      title={`Open ${selectedDirs.size} ${selectedDirs.size === 1 ? 'Directory' : 'Directories'} in Cursor`}
+                      title={`Open ${selectedDirs.size} ${selectedDirs.size === 1 ? "Directory" : "Directories"} in Cursor`}
                       onAction={openInCursor}
                       shortcut={{ modifiers: ["cmd"], key: "o" }}
                       icon={Icon.Terminal}
